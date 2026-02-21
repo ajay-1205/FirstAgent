@@ -3,6 +3,8 @@ from dotenv import load_dotenv
 from google import genai
 from google.genai import types
 import argparse
+from prompt import system_prompt
+from call_function import available_functions
 
 
 
@@ -28,20 +30,29 @@ def main():
     Model = "gemini-2.5-flash"
     response = client.models.generate_content(
     model=Model, 
-    contents=messages
+    contents=messages,
+    config = types.GenerateContentConfig(
+        tools = [available_functions],
+        system_instruction=system_prompt)
     )
     
     #Getting token counts
     if not response.usage_metadata:
         raise RuntimeError("No data regarding tokens are found")
     returned_response = response.text
+    function_calls = response.function_calls
     input_tokens = response.usage_metadata.prompt_token_count
     output_tokens = response.usage_metadata.candidates_token_count
     if args.verbose:
         print(f"User prompt: {args.user_prompt}")
         print(f"Prompt tokens: {input_tokens}")
         print(f"Response tokens: {output_tokens}")
-    print(response.text)
+    if function_calls:
+        for function_call in function_calls:
+                args = dict(function_call.args)
+                print(f"Calling function: {function_call.name}({args})")
+    else:
+        print(returned_response)
     
 
 if __name__ == "__main__":
