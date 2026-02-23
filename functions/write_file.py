@@ -1,5 +1,6 @@
 import os
 from config import MAX_CHARS
+from google.genai import types
 
 
 def write_file(working_directory, file_path, content):
@@ -17,3 +18,22 @@ def write_file(working_directory, file_path, content):
         f.write(content)
 
     return f'Successfully wrote to "{file_path}" ({len(content)} characters written)'
+
+schema_write_file = types.FunctionDeclaration(
+    name="write_file",
+    description="Write the given contents in the given file path, it will write the given string in the fille.",
+    parameters=types.Schema(
+        type=types.Type.OBJECT,
+        properties={
+            "file_path": types.Schema(
+                type=types.Type.STRING,
+                description="File path for the file where we need to write the given content, relative to the working directory.",
+            ),
+            "content": types.Schema(
+                type=types.Type.STRING,
+                description="The Content text thats need to be written in the file.",
+            )
+        },
+        required = ["file_path", "content"],
+    ),
+)
