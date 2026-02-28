@@ -5,8 +5,12 @@ from google.genai import types
 import argparse
 from prompt import system_prompt
 from call_function import available_functions, call_function
+import time
+from collections import deque
 
-
+REQUEST_LIMIT = 5          # max requests
+TIME_WINDOW = 60           # seconds
+request_times = deque()
 
 
 def main():
@@ -34,6 +38,23 @@ def main():
     for i in range(MAX_STEPS):
         if len(messages) > 6:
             messages = messages[-6:]
+
+        current_time = time.time()
+
+        # Remove timestamps older than 60 seconds
+        while request_times and current_time - request_times[0] > TIME_WINDOW:
+            request_times.popleft()
+
+        # If limit reached, wait
+        if len(request_times) >= REQUEST_LIMIT:
+            sleep_time = TIME_WINDOW - (current_time - request_times[0])
+            print(f"Rate limit reached. Sleeping for {sleep_time:.2f} seconds...")
+            time.sleep(sleep_time)
+
+        # Record this request time
+        request_times.append(time.time())
+
+
 
         response = client.models.generate_content(
             model="gemini-2.5-flash",
