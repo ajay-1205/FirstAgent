@@ -36,8 +36,10 @@ def main():
     MAX_STEPS = 8  # reduce from 20
 
     for i in range(MAX_STEPS):
-        if len(messages) > 6:
-            messages = messages[-6:]
+        # SAFE MEMORY TRIMMING
+        if len(messages) > 8:
+            # Always keep the last 4 messages intact
+            messages = messages[-8:]
 
         current_time = time.time()
 
